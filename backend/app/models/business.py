@@ -1,7 +1,6 @@
+﻿from datetime import datetime, timezone
 
-from datetime import datetime, timezone
-
-from sqlalchemy import DateTime, String
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -12,6 +11,12 @@ class Business(Base):
 
     id: Mapped[int] = mapped_column(
         primary_key=True,
+        index=True,
+    )
+
+    owner_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL", name="fk_businesses_owner_id_users"),
+        nullable=True,
         index=True,
     )
 
@@ -41,6 +46,10 @@ class Business(Base):
         DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
+    )
+
+    owner: Mapped["User | None"] = relationship(
+        back_populates="businesses",
     )
 
     transactions: Mapped[list["Transaction"]] = relationship(

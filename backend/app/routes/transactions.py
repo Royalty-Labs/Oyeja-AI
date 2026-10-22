@@ -4,7 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from decimal import Decimal 
 
+from app.core.auth import get_current_user
 from app.db.database import get_db
+from app.models.user import User
 from app.models.business import Business
 from app.models.transaction import Transaction
 from app.schemas.transaction import (
@@ -38,10 +40,12 @@ router = APIRouter(
 )
 def create_transaction(
     transaction_data: TransactionCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     business = db.query(Business).filter(
-        Business.id == transaction_data.business_id
+        Business.id == transaction_data.business_id,
+        Business.owner_id == current_user.id,
     ).first()
 
     if business is None:
@@ -72,10 +76,12 @@ def create_transaction(
 )
 def get_business_transactions(
     business_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     business = db.query(Business).filter(
-        Business.id == business_id
+        Business.id == business_id,
+        Business.owner_id == current_user.id,
     ).first()
 
     if business is None:
@@ -86,7 +92,14 @@ def get_business_transactions(
 
     transactions = (
         db.query(Transaction)
-        .filter(Transaction.business_id == business_id)
+        .join(
+            Business,
+            Transaction.business_id == Business.id,
+        )
+        .filter(
+            Transaction.business_id == business_id,
+            Business.owner_id == current_user.id,
+        )
         .order_by(Transaction.occurred_at.desc())
         .all()
     )
@@ -108,10 +121,12 @@ def get_business_financial_summary(
         default=None,
         description="End date, inclusive (YYYY-MM-DD).",
     ),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     business = db.query(Business).filter(
-        Business.id == business_id
+        Business.id == business_id,
+        Business.owner_id == current_user.id,
     ).first()
 
     if business is None:
@@ -156,8 +171,12 @@ def get_business_financial_summary(
             0,
         ).label("total_expenses"),
         func.count(Transaction.id).label("transaction_count"),
+    ).join(
+        Business,
+        Transaction.business_id == Business.id,
     ).filter(
-        Transaction.business_id == business_id
+        Transaction.business_id == business_id,
+        Business.owner_id == current_user.id,
     )
 
     if start_date is not None:
@@ -202,10 +221,15 @@ def get_business_financial_summary(
 def update_transaction(
     transaction_id: int,
     transaction_data: TransactionUpdate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    transaction = db.query(Transaction).filter(
-        Transaction.id == transaction_id
+    transaction = db.query(Transaction).join(
+        Business,
+        Transaction.business_id == Business.id,
+    ).filter(
+        Transaction.id == transaction_id,
+        Business.owner_id == current_user.id,
     ).first()
 
     if transaction is None:
@@ -233,10 +257,15 @@ def update_transaction(
 )
 def delete_transaction(
     transaction_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    transaction = db.query(Transaction).filter(
-        Transaction.id == transaction_id
+    transaction = db.query(Transaction).join(
+        Business,
+        Transaction.business_id == Business.id,
+    ).filter(
+        Transaction.id == transaction_id,
+        Business.owner_id == current_user.id,
     ).first()
 
     if transaction is None:
@@ -257,10 +286,12 @@ def delete_transaction(
 )
 def get_business_category_breakdown(
     business_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     business = db.query(Business).filter(
-        Business.id == business_id
+        Business.id == business_id,
+        Business.owner_id == current_user.id,
     ).first()
 
     if business is None:
@@ -276,7 +307,14 @@ def get_business_category_breakdown(
             func.sum(Transaction.amount).label("total_amount"),
             func.count(Transaction.id).label("transaction_count"),
         )
-        .filter(Transaction.business_id == business_id)
+        .join(
+            Business,
+            Transaction.business_id == Business.id,
+        )
+        .filter(
+            Transaction.business_id == business_id,
+            Business.owner_id == current_user.id,
+        )
         .group_by(
             Transaction.transaction_type,
             Transaction.category,
@@ -312,10 +350,12 @@ def get_monthly_financial_comparison(
     business_id: int,
     year: int = Query(ge=2000, le=2100),
     month: int = Query(ge=1, le=12),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     business = db.query(Business).filter(
-        Business.id == business_id
+        Business.id == business_id,
+        Business.owner_id == current_user.id,
     ).first()
 
     if business is None:
@@ -397,8 +437,12 @@ def get_monthly_financial_comparison(
             func.count(Transaction.id).label(
                 "transaction_count"
             ),
+        ).join(
+            Business,
+            Transaction.business_id == Business.id,
         ).filter(
             Transaction.business_id == business_id,
+            Business.owner_id == current_user.id,
             Transaction.occurred_at >= period_start,
             Transaction.occurred_at < period_end,
         ).one()
@@ -482,10 +526,12 @@ def get_monthly_financial_comparison(
 )
 def get_business_insights(
     business_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     business = db.query(Business).filter(
-        Business.id == business_id
+        Business.id == business_id,
+        Business.owner_id == current_user.id,
     ).first()
 
     if business is None:

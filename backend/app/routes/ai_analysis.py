@@ -6,7 +6,9 @@ from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.ai.ai_service import generate_business_analysis
+from app.core.auth import get_current_user
 from app.db.database import get_db
+from app.models.user import User
 from app.models.business import Business
 from app.models.transaction import Transaction
 from app.schemas.ai_analysis import BusinessAIAnalysisResponse
@@ -24,10 +26,12 @@ router = APIRouter(
 )
 def analyze_business(
     business_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     business = db.query(Business).filter(
-        Business.id == business_id
+        Business.id == business_id,
+        Business.owner_id == current_user.id,
     ).first()
 
     if business is None:

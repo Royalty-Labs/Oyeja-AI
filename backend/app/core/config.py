@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     OYEJA_AI_API_KEY: str = ""
     OYEJA_AI_BASE_URL: str = ""
     OYEJA_AI_MODEL: str = ""
+    JWT_SECRET_KEY: str = ""
 
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / ".env",

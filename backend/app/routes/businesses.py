@@ -6,7 +6,9 @@ from app.schemas.business_overview import BusinessOverviewResponse
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.auth import get_current_user
 from app.db.database import get_db
+from app.models.user import User
 from app.models.business import Business
 from app.schemas.business import BusinessCreate, BusinessResponse
 
@@ -24,9 +26,13 @@ router = APIRouter(
 )
 def create_business(
     business_data: BusinessCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    business = Business(**business_data.model_dump())
+    business = Business(
+        **business_data.model_dump(),
+        owner_id=current_user.id,
+    )
 
     db.add(business)
     db.commit()
@@ -41,10 +47,12 @@ def create_business(
 )
 def get_business(
     business_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     business = db.query(Business).filter(
-        Business.id == business_id
+        Business.id == business_id,
+        Business.owner_id == current_user.id,
     ).first()
 
     if business is None:
@@ -63,10 +71,12 @@ def get_business(
 )
 def get_business_overview(
     business_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     business = db.query(Business).filter(
-        Business.id == business_id
+        Business.id == business_id,
+        Business.owner_id == current_user.id,
     ).first()
 
     if business is None:
@@ -101,8 +111,12 @@ def get_business_overview(
             0,
         ).label("total_expenses"),
         func.count(Transaction.id).label("transaction_count"),
+        ).join(
+        Business,
+        Transaction.business_id == Business.id,
     ).filter(
-        Transaction.business_id == business_id
+        Transaction.business_id == business_id,
+        Business.owner_id == current_user.id,
     ).one()
 
     total_income = summary.total_income
