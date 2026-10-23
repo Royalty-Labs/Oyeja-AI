@@ -1,4 +1,6 @@
+
 import re
+
 import httpx
 
 from app.core.config import settings
@@ -16,7 +18,7 @@ def generate_business_analysis(
     if not api_key or not base_url or not model:
         raise RuntimeError(
             "AI configuration is incomplete. Check the three "
-            "OYEJA_AI settings in the root .env file."
+            "OYEJA_AI environment variables."
         )
 
     system_prompt = """
@@ -50,8 +52,6 @@ STRICT RULES:
 - Make recommendations specific, proportionate, and evidence-based.
     """
 
-
-
     payload = {
         "model": model,
         "temperature": 0.2,
@@ -81,19 +81,22 @@ STRICT RULES:
                 "Content-Type": "application/json",
             },
             json=payload,
-            timeout=300.0,
+            timeout=120.0,
         )
+
         response.raise_for_status()
 
         result = response.json()
         analysis = result["choices"][0]["message"]["content"]
 
         if not isinstance(analysis, str) or not analysis.strip():
-            raise RuntimeError("The AI provider returned an empty analysis.")
+            raise RuntimeError(
+                "The AI provider returned an empty analysis."
+            )
 
         analysis = analysis.strip()
 
-        # Remove unsupported claims that recorded transactions prove profit.
+        # Filter unsupported claims that recorded transactions prove profit.
         safe_lines = []
         accuracy_warning_added = False
 
@@ -133,7 +136,11 @@ STRICT RULES:
                 )
             )
 
-            if mentions_profit and asserts_profit and not contains_caveat:
+            if (
+                mentions_profit
+                and asserts_profit
+                and not contains_caveat
+            ):
                 if not accuracy_warning_added:
                     safe_lines.append(
                         "**Financial interpretation:** Recorded income "
@@ -145,14 +152,44 @@ STRICT RULES:
 
             safe_lines.append(line)
 
+        return "\n".join(safe_lines).strip()
 
-        analysis = "\n".join(safe_lines).strip()
-        return analysis
-    except httpx.HTTPError as exc:
+    except httpx.HTTPStatusError as exc:
+        status_code = exc.response.status_code
+
+        try:
+            error_data = exc.response.json()
+            provider_error = error_data.get("error", {})
+            error_message = (
+                provider_error.get("message", "")
+                if isinstance(provider_error, dict)
+                else ""
+            )
+        except (ValueError, AttributeError):
+            error_message = ""
+
+        print(
+            f"AI provider returned HTTP {status_code}: "
+            f"{error_message[:300]}"
+        )
+
         raise RuntimeError(
-            "The AI provider request failed. Check that the local "
-            "model server is running and the URL is correct."
+            f"The AI provider returned HTTP {status_code}. "
+            "Check the backend logs for details."
+        ) from exc
+
+    except httpx.HTTPError as exc:
+        print(
+            f"AI provider connection error: {type(exc).__name__}"
+        )
+
+        raise RuntimeError(
+            "The AI provider request failed. Could not connect to "
+            "the configured AI provider. Check the backend logs "
+            "and provider URL."
         ) from exc
 
     except (KeyError, IndexError, TypeError, ValueError) as exc:
-        raise RuntimeError("The AI provider returned an unexpected response.") from exc
+        raise RuntimeError(
+            "The AI provider returned an unexpected response."
+        ) from exc
