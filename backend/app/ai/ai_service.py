@@ -1,24 +1,24 @@
-
 import re
+import time
 
 import httpx
+
+from google import genai
+from google.genai import errors, types
 
 from app.core.config import settings
 
 
-def generate_business_analysis(
-    business_context: dict,
-) -> str:
+def generate_business_analysis(business_context: dict) -> str:
     """Generate an evidence-based analysis of business finances."""
 
     api_key = settings.OYEJA_AI_API_KEY.strip()
-    base_url = settings.OYEJA_AI_BASE_URL.strip().rstrip("/")
     model = settings.OYEJA_AI_MODEL.strip()
 
-    if not api_key or not base_url or not model:
+    if not api_key or not model:
         raise RuntimeError(
-            "AI configuration is incomplete. Check the three "
-            "OYEJA_AI environment variables."
+            "AI configuration is incomplete. Check OYEJA_AI_API_KEY "
+            "and OYEJA_AI_MODEL."
         )
 
     system_prompt = """
@@ -26,191 +26,110 @@ You are Oyeja AI, a careful financial business intelligence assistant
 for small businesses in Nigeria.
 
 Analyze only the business data supplied in the user message.
-Use the configured currency and the four headings below:
+Use the configured currency and exactly these four headings:
 Financial Summary, Findings, Next Steps, Limitations.
 
 STRICT RULES:
 - Report financial figures as provided; do not invent or alter them.
 - Net balance means recorded income minus recorded expenses.
 - Never equate net balance with accounting profit or available cash.
-- Expense-to-income percentage is not a profit margin.
-- Do not call a business financially healthy, successful, struggling,
-  or profitable without sufficient supporting evidence.
-- Do not describe expenses as significant, excessive, or avoidable
-  without a relevant benchmark or other supporting evidence.
-- A largest expense category is a factual observation, not proof
-  that the expense should be reduced.
-- Do not recommend marketing, expanding products, cutting costs,
-  or increasing sales unless the supplied data supports that action.
-- When evidence is insufficient, explicitly say so.
-- Prefer practical verification steps, such as checking whether
-  all transactions for the period have been recorded.
-- Distinguish recorded facts from interpretations and uncertainties.
-- Never invent trends, causes, benchmarks, or missing information.
-- Keep the complete response under 100 words.
-- Use concise bullet points under all four headings.
-- Make recommendations specific, proportionate, and evidence-based.
-    """
+- Do not claim a business is profitable based only on net balance.
+- Ground findings and recommendations in the supplied data.
+- State when the data is insufficient to support a conclusion.
+- Do not invent transactions, trends, causes, forecasts, or figures.
+- Keep the answer under 100 words and use concise bullet points.
+"""
 
-    payload = {
-        "model": model,
-        "reasoning_effort": "low",
-        "max_tokens": 400,
-        "messages": [
-            {
-                "role": "system",
-                "content": system_prompt,
-            },
-            {
-                "role": "user",
-                "content": (
-                    "Analyze this business's financial data and "
-                    "provide evidence-based findings and practical "
-                    "next steps. Keep the analysis concise.\n\n"
-                    f"Business data: {business_context}"
-                ),
-            },
-        ],
-    }
+    prompt = (
+        f"{system_prompt}\n\n"
+        "Analyze this business context:\n"
+        f"{business_context}"
+    )
+
+    client = genai.Client(
+        api_key=api_key,
+        http_options=types.HttpOptions(timeout=45000),
+    )
 
     try:
-        response = None
-
         for attempt in range(3):
             try:
-                response = httpx.post(
-                    f"{base_url}/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {api_key}",
-                        "Content-Type": "application/json",
-                    },
-                    json=payload,
-                    timeout=90.0,
+                response = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.2,
+                        max_output_tokens=400,
+                    ),
                 )
-                response.raise_for_status()
-                break
 
-            except httpx.HTTPStatusError as exc:
-                if exc.response.status_code not in (429, 500, 502, 503, 504):
-                    raise
-                if attempt == 2:
-                    raise
-                import time
-                time.sleep(2 ** attempt)
-
-            except httpx.TimeoutException:
-                if attempt == 2:
-                    raise
-                import time
-                time.sleep(2 ** attempt)
-
-        if response is None:
-            raise RuntimeError("The AI provider returned no response.")
-
-        result = response.json()
-        analysis = result["choices"][0]["message"]["content"]
-
-        if not isinstance(analysis, str) or not analysis.strip():
-            raise RuntimeError(
-                "The AI provider returned an empty analysis."
-            )
-
-        analysis = analysis.strip()
-
-        # Filter unsupported claims that recorded transactions prove profit.
-        safe_lines = []
-        accuracy_warning_added = False
-
-        for line in analysis.splitlines():
-            lower_line = line.lower()
-
-            mentions_profit = re.search(
-                r"\bprofit(?:s|able|ability)?\b",
-                lower_line,
-            )
-
-            contains_caveat = any(
-                phrase in lower_line
-                for phrase in (
-                    "not proof",
-                    "does not establish",
-                    "do not establish",
-                    "cannot establish",
-                    "insufficient evidence",
-                    "not enough evidence",
-                    "not necessarily",
-                )
-            )
-
-            asserts_profit = any(
-                phrase in lower_line
-                for phrase in (
-                    "indicating",
-                    "indicates",
-                    "shown a",
-                    "showing a",
-                    "demonstrates",
-                    "resulting in a profit",
-                    "generated a profit",
-                    "earned a profit",
-                    "profit of",
-                )
-            )
-
-            if (
-                mentions_profit
-                and asserts_profit
-                and not contains_caveat
-            ):
-                if not accuracy_warning_added:
-                    safe_lines.append(
-                        "**Financial interpretation:** Recorded income "
-                        "minus recorded expenses gives a net balance. "
-                        "This alone does not establish accounting profit."
+                result = (response.text or "").strip()
+                if not result:
+                    raise RuntimeError(
+                        "Gemini returned an empty business analysis."
                     )
-                    accuracy_warning_added = True
-                continue
 
-            safe_lines.append(line)
+                # Remove unsupported claims about business profitability.
+                unsupported_profit_claims = [
+                    r"\b(?:the|your) business is profitable\b",
+                    r"\byou are profitable\b",
+                    r"\b(?:the|your) business (?:made|generated|earned|recorded|achieved) a profit\b",
+                    r"\b(?:the|your) business generated profit\b",
+                ]
 
-        return "\n".join(safe_lines).strip()
+                filtered_lines = []
+                removed_claim = False
 
-    except httpx.HTTPStatusError as exc:
-        status_code = exc.response.status_code
+                for line in result.splitlines():
+                    if any(
+                        re.search(pattern, line, flags=re.IGNORECASE)
+                        for pattern in unsupported_profit_claims
+                    ):
+                        removed_claim = True
+                        continue
+                    filtered_lines.append(line)
 
-        try:
-            error_data = exc.response.json()
-            provider_error = error_data.get("error", {})
-            error_message = (
-                provider_error.get("message", "")
-                if isinstance(provider_error, dict)
-                else ""
-            )
-        except (ValueError, AttributeError):
-            error_message = ""
+                result = "\n".join(filtered_lines).strip()
 
-        print(
-            f"AI provider returned HTTP {status_code}: "
-            f"{error_message[:300]}"
-        )
+                if removed_claim:
+                    note = (
+                        "Financial accuracy note: The supplied records "
+                        "do not establish accounting profit."
+                    )
+                    result = f"{result}\n\n{note}" if result else note
 
-        raise RuntimeError(
-            f"The AI provider returned HTTP {status_code}. "
-            "Check the backend logs for details."
-        ) from exc
+                return result
 
-    except httpx.HTTPError as exc:
-        print(
-            f"AI provider connection error: {type(exc).__name__}"
-        )
+            except errors.APIError as exc:
+                status = getattr(exc, "code", None)
+                print(f"Gemini API error: HTTP {status or 'unknown'}")
 
-        raise RuntimeError(
-            "The AI provider request failed. Could not connect to "
-            "the configured AI provider. Check the backend logs "
-            "and provider URL."
-        ) from exc
+                retryable = status is None or status in {
+                    408, 429, 500, 502, 503, 504
+                }
+                if retryable and attempt < 2:
+                    time.sleep(1 + attempt * 2)
+                    continue
 
-    except (KeyError, IndexError, TypeError, ValueError) as exc:
-        raise RuntimeError(
-            "The AI provider returned an unexpected response."
-        ) from exc
+                raise RuntimeError(
+                    f"Gemini provider request failed (HTTP "
+                    f"{status or 'unknown'})."
+                ) from exc
+
+            except (httpx.TransportError, TimeoutError, ConnectionError) as exc:
+                print(
+                    "Gemini connection error: "
+                    f"{type(exc).__name__}"
+                )
+                if attempt < 2:
+                    time.sleep(1 + attempt * 2)
+                    continue
+
+                raise RuntimeError(
+                    "Gemini provider request failed after retries."
+                ) from exc
+
+    finally:
+        client.close()
+
+    raise RuntimeError("Gemini provider request failed.")
