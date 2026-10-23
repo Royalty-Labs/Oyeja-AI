@@ -42,6 +42,24 @@ def create_business(
 
 
 @router.get(
+    "/",
+    response_model=list[BusinessResponse],
+)
+def get_businesses(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    businesses = (
+        db.query(Business)
+        .filter(Business.owner_id == current_user.id)
+        .order_by(Business.id.desc())
+        .all()
+    )
+
+    return businesses
+
+
+@router.get(
     "/{business_id}",
     response_model=BusinessResponse,
 )

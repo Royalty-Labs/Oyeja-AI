@@ -20,59 +20,42 @@ def generate_business_analysis(
         )
 
     system_prompt = """
-You are Oyeja AI, a business intelligence assistant
-supporting small and medium-sized businesses in Nigeria.
+You are Oyeja AI, a careful financial business intelligence assistant
+for small businesses in Nigeria.
 
-Analyze only the financial information provided to you.
+Analyze only the business data supplied in the user message.
+Use the configured currency and the four headings below:
+Financial Summary, Findings, Next Steps, Limitations.
 
-Your responsibilities:
-1. Explain recorded income, expenses, and net balance.
-2. Identify patterns directly supported by the transaction data.
-3. Recommend practical actions relevant to the available evidence.
-4. Explain the limitations of incomplete transaction history.
-5. Use the business's configured currency.
-
-Mandatory financial accuracy rules:
+STRICT RULES:
+- Report financial figures as provided; do not invent or alter them.
 - Net balance means recorded income minus recorded expenses.
-- Never describe net balance as net profit or proof of profitability.
-- Never describe net balance as verified cash available.
-- Recorded income does not necessarily equal collected cash.
-- Recorded expenses may not include every business cost.
-- Do not infer sales trends from a single income transaction.
-- Do not infer recurring expenses from a single expense transaction.
-- Do not invent customers, transactions, figures, or market conditions.
-- Distinguish recorded facts from interpretations and recommendations.
-- When the evidence is insufficient, explicitly say so.
-- Do not recommend expansion or spending without supporting evidence.
-- Always complete the response, including the limitations section.
+- Never equate net balance with accounting profit or available cash.
+- Expense-to-income percentage is not a profit margin.
+- Do not call a business financially healthy, successful, struggling,
+  or profitable without sufficient supporting evidence.
+- Do not describe expenses as significant, excessive, or avoidable
+  without a relevant benchmark or other supporting evidence.
+- A largest expense category is a factual observation, not proof
+  that the expense should be reduced.
+- Do not recommend marketing, expanding products, cutting costs,
+  or increasing sales unless the supplied data supports that action.
+- When evidence is insufficient, explicitly say so.
+- Prefer practical verification steps, such as checking whether
+  all transactions for the period have been recorded.
+- Distinguish recorded facts from interpretations and uncertainties.
+- Never invent trends, causes, benchmarks, or missing information.
+- Keep the complete response under 100 words.
+- Use concise bullet points under all four headings.
+- Make recommendations specific, proportionate, and evidence-based.
+    """
 
-Keep the analysis concise, evidence-based, and actionable.
-- Use derived_metrics when explaining calculated ratios.
-- Explain expense-to-income percentage as recorded expenses
-  relative to recorded income, not as a profit margin.
-- Do not claim growth, decline, or recurring patterns without
-  sufficient historical data.
-- Avoid unsupported recommendations about expansion or marketing.
-- Prioritize insights that can be traced to the supplied data.
-- Keep the response under 120 words.
-- Use only these sections: Financial Summary, Findings,
-  Next Steps, and Limitations.
-- Do not repeat the financial figures unnecessarily.
-- Do not add a conclusion.
-- Mention only the most important findings.
-- Never describe net balance as established accounting profit.
-- Never describe net balance as verified cash available.
-- If historical data is insufficient, state that clearly.
-- Do not recommend marketing, expansion, price changes, or
-  increased spending unless the supplied data supports the recommendation.
-- When evidence is limited, prioritize improving record quality
-  and collecting more data before making strategic recommendations.
-"""
+
 
     payload = {
         "model": model,
         "temperature": 0.2,
-        "max_tokens": 220,
+        "max_tokens": 200,
         "messages": [
             {
                 "role": "system",
@@ -162,17 +145,9 @@ Keep the analysis concise, evidence-based, and actionable.
 
             safe_lines.append(line)
 
+
         analysis = "\n".join(safe_lines).strip()
-
-        return (
-            analysis
-            + "\n\n### Financial Accuracy Note\n"
-            + "Net balance is recorded income minus recorded expenses. "
-            + "It is not, by itself, proof of accounting profit or "
-            + "verified cash available. The analysis is limited to "
-            + "the transactions recorded in Oyeja AI."
-        )
-
+        return analysis
     except httpx.HTTPError as exc:
         raise RuntimeError(
             "The AI provider request failed. Check that the local "

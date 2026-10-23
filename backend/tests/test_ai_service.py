@@ -6,29 +6,21 @@ from app.ai import ai_service
 
 @pytest.fixture
 def configured_ai(monkeypatch):
-    monkeypatch.setattr(
-        ai_service.settings, "OYEJA_AI_API_KEY", "test-key"
-    )
+    monkeypatch.setattr(ai_service.settings, "OYEJA_AI_API_KEY", "test-key")
     monkeypatch.setattr(
         ai_service.settings, "OYEJA_AI_BASE_URL", "https://example.test/v1"
     )
-    monkeypatch.setattr(
-        ai_service.settings, "OYEJA_AI_MODEL", "test-model"
-    )
+    monkeypatch.setattr(ai_service.settings, "OYEJA_AI_MODEL", "test-model")
 
 
 def make_response(payload, status_code=200):
     request = httpx.Request(
         "POST", "https://example.test/v1/chat/completions"
     )
-    return httpx.Response(
-        status_code,
-        json=payload,
-        request=request,
-    )
+    return httpx.Response(status_code, json=payload, request=request)
 
 
-def test_ai_service_returns_analysis_and_accuracy_note(
+def test_ai_service_returns_analysis_without_duplicate_accuracy_note(
     configured_ai, monkeypatch
 ):
     def fake_post(url, **kwargs):
@@ -36,7 +28,11 @@ def test_ai_service_returns_analysis_and_accuracy_note(
         assert kwargs["json"]["model"] == "test-model"
         return make_response({
             "choices": [
-                {"message": {"content": "### Findings\nReview recorded expenses."}}
+                {
+                    "message": {
+                        "content": "### Findings\nReview recorded expenses."
+                    }
+                }
             ]
         })
 
@@ -47,8 +43,7 @@ def test_ai_service_returns_analysis_and_accuracy_note(
     )
 
     assert "Review recorded expenses." in result
-    assert "Financial Accuracy Note" in result
-    assert "not, by itself, proof of accounting profit" in result
+    assert "Financial Accuracy Note" not in result
 
 
 def test_ai_service_rejects_incomplete_configuration(monkeypatch):
@@ -56,9 +51,7 @@ def test_ai_service_rejects_incomplete_configuration(monkeypatch):
     monkeypatch.setattr(
         ai_service.settings, "OYEJA_AI_BASE_URL", "https://example.test/v1"
     )
-    monkeypatch.setattr(
-        ai_service.settings, "OYEJA_AI_MODEL", "test-model"
-    )
+    monkeypatch.setattr(ai_service.settings, "OYEJA_AI_MODEL", "test-model")
 
     with pytest.raises(RuntimeError, match="configuration is incomplete"):
         ai_service.generate_business_analysis({})
@@ -83,7 +76,6 @@ def test_ai_service_rejects_empty_analysis(configured_ai, monkeypatch):
         {},
         {"choices": []},
         {"choices": [{"message": {}}]},
-
     ],
 )
 def test_ai_service_rejects_malformed_responses(
@@ -106,7 +98,9 @@ def test_ai_service_converts_http_errors_to_runtime_error(
         request = httpx.Request(
             "POST", "https://example.test/v1/chat/completions"
         )
-        raise httpx.ConnectError("Simulated connection failure", request=request)
+        raise httpx.ConnectError(
+            "Simulated connection failure", request=request
+        )
 
     monkeypatch.setattr(ai_service.httpx, "post", failing_post)
 
@@ -136,8 +130,6 @@ def test_ai_service_filters_unsupported_profit_claim(
 
     assert "generated a profit of 50000" not in result
     assert "does not establish accounting profit" in result
-    assert "Financial Accuracy Note" in result
-
 
 
 def test_ai_service_rejects_none_analysis(configured_ai, monkeypatch):
