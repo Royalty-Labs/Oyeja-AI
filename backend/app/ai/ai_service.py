@@ -54,8 +54,8 @@ STRICT RULES:
 
     payload = {
         "model": model,
-        "temperature": 0.2,
-        "max_tokens": 200,
+        "reasoning_effort": "low",
+        "max_tokens": 400,
         "messages": [
             {
                 "role": "system",
@@ -74,17 +74,38 @@ STRICT RULES:
     }
 
     try:
-        response = httpx.post(
-            f"{base_url}/chat/completions",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-            timeout=120.0,
-        )
+        response = None
 
-        response.raise_for_status()
+        for attempt in range(3):
+            try:
+                response = httpx.post(
+                    f"{base_url}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json=payload,
+                    timeout=90.0,
+                )
+                response.raise_for_status()
+                break
+
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code not in (429, 500, 502, 503, 504):
+                    raise
+                if attempt == 2:
+                    raise
+                import time
+                time.sleep(2 ** attempt)
+
+            except httpx.TimeoutException:
+                if attempt == 2:
+                    raise
+                import time
+                time.sleep(2 ** attempt)
+
+        if response is None:
+            raise RuntimeError("The AI provider returned no response.")
 
         result = response.json()
         analysis = result["choices"][0]["message"]["content"]
