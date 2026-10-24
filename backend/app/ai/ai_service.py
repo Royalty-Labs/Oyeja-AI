@@ -66,7 +66,29 @@ STRICT RULES:
                     ),
                 )
 
-                result = (response.text or "").strip()
+                raw_text = response.text or ""
+                candidates = getattr(response, "candidates", None) or []
+                finish_reason = (
+                    getattr(candidates[0], "finish_reason", None)
+                    if candidates
+                    else "no_candidate"
+                )
+                prompt_feedback = getattr(
+                    response, "prompt_feedback", None
+                )
+                block_reason = getattr(
+                    prompt_feedback, "block_reason", None
+                )
+
+                print(
+                    "Gemini response diagnostics: "
+                    f"finish_reason={finish_reason}, "
+                    f"candidate_count={len(candidates)}, "
+                    f"text_length={len(raw_text)}, "
+                    f"block_reason={block_reason}"
+                )
+
+                result = raw_text.strip()
                 if not result:
                     raise RuntimeError(
                         "Gemini returned an empty business analysis."
