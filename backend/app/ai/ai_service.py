@@ -61,7 +61,9 @@ STRICT RULES:
                     model=model,
                     contents=prompt,
                     config=types.GenerateContentConfig(
-                        temperature=0.2,
+                        thinking_config=types.ThinkingConfig(
+                            thinking_level="minimal",
+                        ),
                         max_output_tokens=1200,
                     ),
                 )
