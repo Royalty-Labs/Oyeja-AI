@@ -2,6 +2,7 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "./context/AuthContext";
 import Workspace from "./components/Workspace";
+import FloatingAssistant from "./components/FloatingAssistant";
 import {
   Activity,
   ArrowRight,
@@ -93,14 +94,17 @@ function App() {
   }
 
   if (user) {
-  return (
-    <Workspace
-      user={user}
-      token={token}
-      onLogout={logout}
-    />
-  );
-}
+    return (
+      <>
+        <Workspace
+          user={user}
+          token={token}
+          onLogout={logout}
+        />
+        {token && <FloatingAssistant token={token} />}
+      </>
+    );
+  }
 
   return (
     <main className="auth-layout">

@@ -319,3 +319,34 @@ export const aiAnalysisApi = {
     );
   },
 };
+
+
+export interface AIChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface AIChatResponse {
+  business_id: number;
+  answer: string;
+}
+
+export const aiChatApi = {
+  chat(
+    businessId: number,
+    messages: AIChatMessage[],
+    token: string,
+  ) {
+    return apiRequest<AIChatResponse>(
+      "/ai-assistant/chat",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          business_id: businessId,
+          messages,
+        }),
+      },
+      token,
+    );
+  },
+};
