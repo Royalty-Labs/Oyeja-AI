@@ -171,5 +171,25 @@ def analyze_business(
     return {
         "business_id": business.id,
         "model": settings.OYEJA_AI_MODEL or "local-model",
+        "financial_summary": {
+            "total_income": str(total_income),
+            "total_expenses": str(total_expenses),
+            "net_balance": str(total_income - total_expenses),
+            "transaction_count": summary.transaction_count,
+        },
+        "derived_metrics": {
+            "expense_to_income_percentage": expense_to_income_percentage,
+            "income_transaction_count": income_transaction_count,
+            "expense_transaction_count": expense_transaction_count,
+        },
+        "category_breakdown": [
+            {
+                "transaction_type": row.transaction_type,
+                "category": row.category,
+                "total_amount": str(row.total),
+                "transaction_count": row.count,
+            }
+            for row in category_rows
+        ],
         "analysis": analysis,
     }

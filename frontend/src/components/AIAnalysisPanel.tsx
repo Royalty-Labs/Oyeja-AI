@@ -158,6 +158,13 @@ export default function AIAnalysisPanel({
     return null;
   }
 
+  const formatMoney = (value: number | string) =>
+    new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: business.currency || "NGN",
+      maximumFractionDigits: 2,
+    }).format(Number(value));
+
   const analysisLines = data.analysis.split("\n");
 
   return (
@@ -178,6 +185,114 @@ export default function AIAnalysisPanel({
         <div className="financial-insights-business">
           <span className="financial-insights-status-dot" />
           {business.name}
+        </div>
+      </section>
+
+      <section className="financial-insights-panel">
+        <div className="financial-insights-panel-heading">
+          <div>
+            <span className="financial-insights-eyebrow">
+              BACKEND-CALCULATED EVIDENCE
+            </span>
+            <h3>Financial snapshot</h3>
+            <p>
+              Calculated from your recorded transactions. These figures
+              are separate from the AI-generated interpretation.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="rounded-lg border p-4">
+            <p className="text-sm text-gray-500">Recorded income</p>
+            <p className="mt-2 text-xl font-semibold">
+              {formatMoney(data.financial_summary.total_income)}
+            </p>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <p className="text-sm text-gray-500">Recorded expenses</p>
+            <p className="mt-2 text-xl font-semibold">
+              {formatMoney(data.financial_summary.total_expenses)}
+            </p>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <p className="text-sm text-gray-500">Net balance</p>
+            <p className="mt-2 text-xl font-semibold">
+              {formatMoney(data.financial_summary.net_balance)}
+            </p>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <p className="text-sm text-gray-500">Recorded transactions</p>
+            <p className="mt-2 text-xl font-semibold">
+              {data.financial_summary.transaction_count}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-2">
+          <h4 className="font-semibold">Additional metrics</h4>
+          <p className="text-sm leading-6">
+            Expenses as a percentage of recorded income:{" "}
+            <strong>
+              {data.derived_metrics.expense_to_income_percentage === null
+                ? "Not available"
+                : `${data.derived_metrics.expense_to_income_percentage.toFixed(2)}%`}
+            </strong>
+          </p>
+          <p className="text-sm leading-6">
+            Income transactions:{" "}
+            <strong>{data.derived_metrics.income_transaction_count}</strong>
+          </p>
+          <p className="text-sm leading-6">
+            Expense transactions:{" "}
+            <strong>{data.derived_metrics.expense_transaction_count}</strong>
+          </p>
+          <p className="text-xs text-gray-500">
+            The expense-to-income percentage is not a profit margin.
+          </p>
+        </div>
+
+        <div className="mt-6 space-y-3">
+          <h4 className="font-semibold">Category breakdown</h4>
+
+          {data.category_breakdown.length === 0 ? (
+            <p className="text-sm text-gray-500">
+              No categorized transactions are available yet.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="py-2 pr-4">Type</th>
+                    <th className="py-2 pr-4">Category</th>
+                    <th className="py-2 pr-4">Total</th>
+                    <th className="py-2">Transactions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.category_breakdown.map((item, index) => (
+                    <tr
+                      key={`${item.transaction_type}-${item.category}-${index}`}
+                      className="border-b"
+                    >
+                      <td className="py-2 pr-4 capitalize">
+                        {item.transaction_type}
+                      </td>
+                      <td className="py-2 pr-4">{item.category}</td>
+                      <td className="py-2 pr-4">
+                        {formatMoney(item.total_amount)}
+                      </td>
+                      <td className="py-2">{item.transaction_count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </section>
 

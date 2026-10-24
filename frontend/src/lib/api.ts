@@ -114,9 +114,32 @@ export interface BusinessInsightsResponse {
   insights: BusinessInsight[];
 }
 
+export interface AIFinancialSummary {
+  total_income: FinancialNumber;
+  total_expenses: FinancialNumber;
+  net_balance: FinancialNumber;
+  transaction_count: number;
+}
+
+export interface AIDerivedFinancialMetrics {
+  expense_to_income_percentage: number | null;
+  income_transaction_count: number;
+  expense_transaction_count: number;
+}
+
+export interface AICategoryEvidence {
+  transaction_type: "income" | "expense";
+  category: string;
+  total_amount: FinancialNumber;
+  transaction_count: number;
+}
+
 export interface BusinessAIAnalysisResponse {
   business_id: number;
   model: string;
+  financial_summary: AIFinancialSummary;
+  derived_metrics: AIDerivedFinancialMetrics;
+  category_breakdown: AICategoryEvidence[];
   analysis: string;
 }
 

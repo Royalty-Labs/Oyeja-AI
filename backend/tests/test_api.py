@@ -1,4 +1,4 @@
-﻿from decimal import Decimal
+from decimal import Decimal
 
 import pytest
 
@@ -467,6 +467,31 @@ def test_ai_analysis_uses_backend_calculated_financial_data(
     assert result["business_id"] == business_id
     assert isinstance(result["model"], str)
     assert result["analysis"].startswith("### Financial Summary")
+
+    # Verify backend-calculated financial evidence in the API response.
+    financial_summary = result["financial_summary"]
+    assert Decimal(str(financial_summary["total_income"])) == Decimal("50000.00")
+    assert Decimal(str(financial_summary["total_expenses"])) == Decimal("12000.00")
+    assert Decimal(str(financial_summary["net_balance"])) == Decimal("38000.00")
+    assert financial_summary["transaction_count"] == 2
+
+    response_metrics = result["derived_metrics"]
+    assert response_metrics["expense_to_income_percentage"] == 24.0
+    assert response_metrics["income_transaction_count"] == 1
+    assert response_metrics["expense_transaction_count"] == 1
+
+    response_categories = {
+        (item["transaction_type"], item["category"]): item
+        for item in result["category_breakdown"]
+    }
+
+    sales = response_categories[("income", "Sales")]
+    assert Decimal(str(sales["total_amount"])) == Decimal("50000.00")
+    assert sales["transaction_count"] == 1
+
+    supplies = response_categories[("expense", "Supplies")]
+    assert Decimal(str(supplies["total_amount"])) == Decimal("12000.00")
+    assert supplies["transaction_count"] == 1
 
     summary = captured_context["financial_summary"]
 
