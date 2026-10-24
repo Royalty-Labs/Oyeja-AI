@@ -27,7 +27,10 @@ for small businesses in Nigeria.
 
 Analyze only the business data supplied in the user message.
 Use the configured currency and exactly these four headings:
-Financial Summary, Findings, Next Steps, Limitations.
+### Financial Summary
+### Findings
+### Next Steps
+### Limitations
 
 STRICT RULES:
 - Report financial figures as provided; do not invent or alter them.
@@ -37,7 +40,7 @@ STRICT RULES:
 - Ground findings and recommendations in the supplied data.
 - State when the data is insufficient to support a conclusion.
 - Do not invent transactions, trends, causes, forecasts, or figures.
-- Keep the answer under 100 words and use concise bullet points.
+- Keep the answer concise, under 150 words, and use bullet points.
 """
 
     prompt = (
@@ -59,7 +62,7 @@ STRICT RULES:
                     contents=prompt,
                     config=types.GenerateContentConfig(
                         temperature=0.2,
-                        max_output_tokens=400,
+                        max_output_tokens=800,
                     ),
                 )
 
