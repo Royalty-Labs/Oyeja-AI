@@ -212,7 +212,7 @@ function TransactionsPanel({
   }
 
   return (
-    <section className="space-y-6">
+    <section className="transactions-page space-y-6">
       <div>
         <h2 className="text-2xl font-semibold">Transactions</h2>
         <p className="mt-2 text-sm text-gray-500">
@@ -220,7 +220,7 @@ function TransactionsPanel({
         </p>
       </div>
 
-      <div className="max-w-xl">
+      <div className="transactions-business-picker max-w-xl">
         <label
           htmlFor="transaction-business"
           className="mb-1 block text-sm font-medium"
@@ -257,22 +257,22 @@ function TransactionsPanel({
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <article className="rounded-xl border p-5">
+      <div className="transactions-summary-grid grid gap-4 sm:grid-cols-3">
+        <article className="transaction-summary-card rounded-xl border p-5">
           <p className="text-sm text-gray-500">Total income</p>
           <p className="mt-2 text-xl font-semibold">
             {summary ? formatMoney(summary.total_income) : "—"}
           </p>
         </article>
 
-        <article className="rounded-xl border p-5">
+        <article className="transaction-summary-card rounded-xl border p-5">
           <p className="text-sm text-gray-500">Total expenses</p>
           <p className="mt-2 text-xl font-semibold">
             {summary ? formatMoney(summary.total_expenses) : "—"}
           </p>
         </article>
 
-        <article className="rounded-xl border p-5">
+        <article className="transaction-summary-card rounded-xl border p-5">
           <p className="text-sm text-gray-500">Net balance</p>
           <p className="mt-2 text-xl font-semibold">
             {summary ? formatMoney(summary.net_balance) : "—"}
@@ -282,9 +282,9 @@ function TransactionsPanel({
 
       <form
         onSubmit={handleCreateTransaction}
-        className="space-y-4 rounded-xl border p-5"
+        className="transaction-form space-y-4 rounded-xl border p-5"
       >
-        <h3 className="text-lg font-semibold">Record a transaction</h3>
+        <h3 className="transaction-form-title text-lg font-semibold">Record a transaction</h3>
 
         <div>
           <label
@@ -390,7 +390,7 @@ function TransactionsPanel({
         </button>
       </form>
 
-      <div className="space-y-4">
+      <div className="transaction-history-section space-y-4">
         <div>
           <h3 className="text-lg font-semibold">Transaction history</h3>
           <p className="mt-1 text-sm text-gray-500">
@@ -407,11 +407,11 @@ function TransactionsPanel({
             No transactions have been recorded for this business yet.
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="transaction-history-list space-y-3">
             {transactions.map((transaction) => (
               <article
                 key={transaction.id}
-                className="flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between"
+                className="transaction-history-item flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="min-w-0">
                   <p className="font-semibold">{transaction.category}</p>
@@ -425,11 +425,11 @@ function TransactionsPanel({
 
                 <div className="flex items-center justify-between gap-4 sm:justify-end">
                   <div className="text-right">
-                    <p className="font-semibold">
+                    <p className="transaction-history-amount font-semibold">
                       {transaction.transaction_type === "income" ? "+" : "−"}
                       {formatMoney(transaction.amount)}
                     </p>
-                    <p className="text-xs capitalize text-gray-500">
+                    <p className="transaction-history-type text-xs capitalize text-gray-500">
                       {transaction.transaction_type}
                     </p>
                   </div>
@@ -439,7 +439,7 @@ function TransactionsPanel({
                     onClick={() => {
                       void handleDeleteTransaction(transaction.id);
                     }}
-                    className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
+                    className="transaction-delete-button rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
                     aria-label={`Delete ${transaction.category} transaction`}
                   >
                     Delete

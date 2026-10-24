@@ -367,129 +367,136 @@ async function handleCreateBusiness(event: FormEvent<HTMLFormElement>) {
     businesses={businesses}
   />
 ) : activeSection === "Business Profile" ? (
-  <section className="space-y-6">
-    <div>
-      <h2 className="text-2xl font-semibold">Business Profile</h2>
-      <p className="mt-2 text-sm text-gray-500">
-        Add and manage the businesses you want OyejaAI to analyse.
+  <section className="profile-page">
+    <div className="profile-intro">
+      <span className="page-eyebrow">BUSINESS DETAILS</span>
+      <h2>Business Profile</h2>
+      <p>
+        Manage the businesses whose financial performance you want
+        OyejaAI to help you understand.
       </p>
     </div>
 
-    <form
-      onSubmit={handleCreateBusiness}
-      className="space-y-4 rounded-xl border p-5"
-    >
-      <h3 className="text-lg font-semibold">Add a business</h3>
-
-      <div>
-        <label htmlFor="business-name" className="mb-1 block text-sm font-medium">
-          Business name
-        </label>
-        <input
-          id="business-name"
-          type="text"
-          value={businessName}
-          onChange={(event) => setBusinessName(event.target.value)}
-          placeholder="e.g. Royalty Stores"
-          minLength={2}
-          maxLength={150}
-          required
-          className="w-full rounded-lg border px-3 py-2"
-        />
+    <form onSubmit={handleCreateBusiness} className="profile-form">
+      <div className="profile-form-heading">
+        <div>
+          <h3>Add a business</h3>
+          <p>Enter the basic details for your business.</p>
+        </div>
+        <span className="profile-form-icon">
+          <Building2 size={21} />
+        </span>
       </div>
 
-      <div>
-        <label htmlFor="business-type" className="mb-1 block text-sm font-medium">
-          Business type or industry
-        </label>
-        <input
-          id="business-type"
-          type="text"
-          value={businessType}
-          onChange={(event) => setBusinessType(event.target.value)}
-          placeholder="e.g. Retail, Fashion, Agriculture"
-          minLength={2}
-          maxLength={100}
-          required
-          className="w-full rounded-lg border px-3 py-2"
-        />
-      </div>
+      <div className="profile-fields">
+        <div className="profile-field">
+          <label htmlFor="business-name">Business name</label>
+          <input
+            id="business-name"
+            type="text"
+            value={businessName}
+            onChange={(event) => setBusinessName(event.target.value)}
+            placeholder="e.g. Royalty Stores"
+            minLength={2}
+            maxLength={150}
+            required
+          />
+        </div>
 
-      <div>
-        <label htmlFor="business-location" className="mb-1 block text-sm font-medium">
-          Business location
-        </label>
-        <input
-          id="business-location"
-          type="text"
-          value={businessLocation}
-          onChange={(event) => setBusinessLocation(event.target.value)}
-          placeholder="e.g. Ado-Ekiti, Ekiti State"
-          minLength={2}
-          maxLength={150}
-          required
-          className="w-full rounded-lg border px-3 py-2"
-        />
-      </div>
+        <div className="profile-field">
+          <label htmlFor="business-type">Business type or industry</label>
+          <input
+            id="business-type"
+            type="text"
+            value={businessType}
+            onChange={(event) => setBusinessType(event.target.value)}
+            placeholder="e.g. Retail, Fashion, Agriculture"
+            minLength={2}
+            maxLength={100}
+            required
+          />
+        </div>
 
-      <div>
-        <label htmlFor="business-currency" className="mb-1 block text-sm font-medium">
-          Currency
-        </label>
-        <select
-          id="business-currency"
-          value={businessCurrency}
-          onChange={(event) => setBusinessCurrency(event.target.value)}
-          required
-          className="w-full rounded-lg border px-3 py-2"
-        >
-          <option value="NGN">NGN — Nigerian Naira</option>
-          <option value="USD">USD — US Dollar</option>
-          <option value="GBP">GBP — British Pound</option>
-        </select>
+        <div className="profile-field">
+          <label htmlFor="business-location">Business location</label>
+          <input
+            id="business-location"
+            type="text"
+            value={businessLocation}
+            onChange={(event) => setBusinessLocation(event.target.value)}
+            placeholder="e.g. Ado-Ekiti, Ekiti State"
+            minLength={2}
+            maxLength={150}
+            required
+          />
+        </div>
+
+        <div className="profile-field">
+          <label htmlFor="business-currency">Currency</label>
+          <select
+            id="business-currency"
+            value={businessCurrency}
+            onChange={(event) => setBusinessCurrency(event.target.value)}
+            required
+          >
+            <option value="NGN">NGN — Nigerian Naira</option>
+            <option value="USD">USD — US Dollar</option>
+            <option value="GBP">GBP — British Pound</option>
+          </select>
+        </div>
       </div>
 
       {businessesError && (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="profile-error">
           {businessesError}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={isCreatingBusiness}
-        className="rounded-lg bg-black px-5 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {isCreatingBusiness ? "Saving business..." : "Save business"}
-      </button>
+      <div className="profile-form-actions">
+        <button
+          type="submit"
+          className="profile-submit"
+          disabled={isCreatingBusiness}
+        >
+          {isCreatingBusiness ? "Saving business..." : "Save business"}
+        </button>
+      </div>
     </form>
 
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Your businesses</h3>
+    <div className="profile-businesses">
+      <div className="profile-section-heading">
+        <div>
+          <h3>Your businesses</h3>
+          <p>Business profiles available in your workspace.</p>
+        </div>
+        <span className="profile-count">{businesses.length}</span>
+      </div>
 
       {businessesLoading ? (
-        <p className="text-sm text-gray-500">Loading your businesses...</p>
+        <p className="profile-feedback">Loading your businesses...</p>
       ) : businesses.length === 0 ? (
-        <p className="rounded-xl border border-dashed p-5 text-sm text-gray-500">
-          No businesses yet. Complete the form above to get started.
-        </p>
+        <div className="profile-empty-state">
+          <Building2 size={25} />
+          <strong>No businesses yet</strong>
+          <p>Complete the form above to add your first business.</p>
+        </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="profile-business-grid">
           {businesses.map((business) => (
-            <article
-              key={business.id}
-              className="rounded-xl border p-5"
-            >
-              <h4 className="font-semibold">{business.name}</h4>
-              <p className="mt-2 text-sm text-gray-500">
-                {business.business_type}
-              </p>
-              <p className="mt-1 text-sm text-gray-500">
-                {business.location}
-              </p>
-              <p className="mt-3 text-sm">
-                Currency: {business.currency}
-              </p>
+            <article key={business.id} className="profile-business-card">
+              <div className="profile-business-card-top">
+                <span className="profile-business-icon">
+                  <Building2 size={19} />
+                </span>
+                <span className="profile-business-currency">
+                  {business.currency}
+                </span>
+              </div>
+              <h4>{business.name}</h4>
+              <p>{business.business_type}</p>
+              <div className="profile-business-location">
+                <span>{business.location}</span>
+              </div>
             </article>
           ))}
         </div>
@@ -600,48 +607,32 @@ function DashboardHome({
 
   return (
     <>
-      <section className="dashboard-welcome">
-        <div className="welcome-copy">
-          <span className="welcome-badge">
-            <Sparkles size={14} />
-            YOUR BUSINESS INTELLIGENCE SPACE
+      <section className="dashboard-context">
+        <div className="dashboard-context-copy">
+          <span className="dashboard-context-label">
+            <Activity size={14} />
+            BUSINESS OVERVIEW
           </span>
-          <h2>Welcome to OyejaAI</h2>
+          <h2>
+            Welcome back, {user.email.split("@")[0].replace(/^./, (character) => character.toUpperCase())}.
+          </h2>
           <p>
             {business
-              ? `Your workspace is connected to ${business.name}. Review your business performance and keep your records up to date.`
-              : `Your account is ready, ${user.email}. Set up your business to start bringing your data into one place.`}
+              ? `Here is your financial snapshot for ${business.name}.`
+              : "Set up your business profile to start tracking your financial performance."}
           </p>
-          <button
-            className="welcome-action"
-            onClick={() =>
-              onNavigate(business ? "Transactions" : "Business Profile")
-            }
-          >
-            {business ? "View transactions" : "Set up your business"}
-            <ChevronRight size={17} />
-          </button>
         </div>
-        <div className="welcome-illustration" aria-hidden="true">
-          <div className="illustration-circle illustration-circle-one" />
-          <div className="illustration-circle illustration-circle-two" />
-          <div className="illustration-panel">
-            <Activity size={25} />
-            <span>Business clarity</span>
-            <strong>Starts with your data.</strong>
-            <div className="illustration-bars">
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-            </div>
-          </div>
-        </div>
-      </section>
 
+        <button
+          className="dashboard-context-action"
+          onClick={() =>
+            onNavigate(business ? "Transactions" : "Business Profile")
+          }
+        >
+          {business ? "View transactions" : "Set up business"}
+          <ChevronRight size={16} />
+        </button>
+      </section>
       <div className="section-title-row">
         <div>
           <h2>Your overview</h2>
@@ -833,43 +824,128 @@ function SectionPlaceholder({
   icon: typeof LayoutDashboard;
   onNavigate: (section: Section) => void;
 }) {
-  const descriptions: Record<Section, string> = {
-    Dashboard: "",
-    Transactions:
-      "This section will let you record and review income and expenses. We will connect it to your existing transactions API before showing business records here.",
-    "Business Analytics":
-      "This section will turn recorded business activity into performance summaries, category breakdowns, and meaningful comparisons.",
-    "Financial Insights":
-      "This section will help you understand revenue, expenses, cash flow, and financial patterns using your actual business data.",
-    "AI Analysis":
-      "This section will provide AI-assisted answers and recommendations grounded in your business records, rather than generic responses.",
-    "Business Profile":
-      "This section will collect your business name, industry, location, currency, and other context needed to make your analysis relevant.",
-    Settings:
-      "This section will eventually hold your account preferences and workspace settings.",
-  };
+  const isSettings = section === "Settings";
+
+  if (!isSettings) {
+    return (
+      <section className="module-empty-state">
+        <div className="empty-state-icon">
+          <Icon size={30} />
+        </div>
+        <span className="page-eyebrow">WORK IN PROGRESS</span>
+        <h2>{section}</h2>
+        <p>This section is not available yet.</p>
+        <div className="empty-state-note">
+          <span className="status-dot status-dot-muted" />
+          This section has not been implemented yet.
+        </div>
+        <button
+          className="welcome-action"
+          onClick={() => onNavigate("Dashboard")}
+        >
+          Back to dashboard <ChevronRight size={17} />
+        </button>
+      </section>
+    );
+  }
 
   return (
-    <section className="module-empty-state">
-      <div className="empty-state-icon">
-        <Icon size={30} />
-      </div>
-      <span className="page-eyebrow">WORK IN PROGRESS</span>
-      <h2>{section}</h2>
-      <p>{descriptions[section]}</p>
-      <div className="empty-state-note">
+    <div className="settings-page">
+      <header className="settings-page-header">
+        <div>
+          <span className="page-eyebrow">WORKSPACE PREFERENCES</span>
+          <h2>Settings</h2>
+          <p>
+            Review your workspace and account information. More
+            configurable preferences will be added as they become available.
+          </p>
+        </div>
+        <span className="settings-header-icon">
+          <Icon size={25} />
+        </span>
+      </header>
+
+      <section className="settings-section-card">
+        <div className="settings-card-heading">
+          <span className="settings-card-icon">
+            <Icon size={20} />
+          </span>
+          <div>
+            <h3>Workspace overview</h3>
+            <p>Core information about your OyejaAI workspace.</p>
+          </div>
+        </div>
+
+        <div className="settings-information-row">
+          <div>
+            <strong>Workspace</strong>
+            <p>Your OyejaAI business workspace</p>
+          </div>
+          <span className="settings-value-badge">Active workspace</span>
+        </div>
+
+        <div className="settings-information-row">
+          <div>
+            <strong>Business records</strong>
+            <p>Your transactions and financial records remain in your workspace.</p>
+          </div>
+          <span className="settings-value-text">Unchanged</span>
+        </div>
+
+        <div className="settings-information-row">
+          <div>
+            <strong>Preferences</strong>
+            <p>Editable workspace preferences are not available yet.</p>
+          </div>
+          <span className="settings-value-badge settings-value-badge-muted">
+            Coming later
+          </span>
+        </div>
+      </section>
+
+      <section className="settings-section-card">
+        <div className="settings-card-heading">
+          <span className="settings-card-icon">
+            <Icon size={20} />
+          </span>
+          <div>
+            <h3>Account and access</h3>
+            <p>Manage your session through the existing sign-in flow.</p>
+          </div>
+        </div>
+
+        <div className="settings-information-row">
+          <div>
+            <strong>Sign-in and security</strong>
+            <p>
+              Your existing authentication and session controls remain in place.
+            </p>
+          </div>
+          <span className="settings-value-text">Protected session</span>
+        </div>
+
+        <p className="settings-security-note">
+          For now, account changes and security preferences cannot be edited
+          from this page. No account or authentication settings have been
+          changed.
+        </p>
+      </section>
+
+      <div className="settings-footer">
         <span className="status-dot status-dot-muted" />
-        This module is not connected yet. No business data or analysis is being
-        displayed here.
+        <p>
+          This page is informational. It does not modify your business data,
+          account details, or security settings.
+        </p>
       </div>
+
       <button
-        className="welcome-action"
+        className="welcome-action settings-back-button"
         onClick={() => onNavigate("Dashboard")}
       >
         Back to dashboard <ChevronRight size={17} />
       </button>
-    </section>
+    </div>
   );
 }
-
 export default Workspace;

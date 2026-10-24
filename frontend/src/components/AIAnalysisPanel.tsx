@@ -94,7 +94,7 @@ export default function AIAnalysisPanel({
 
   if (!business) {
     return (
-      <section className="financial-insights-state panel-card">
+      <section className="ai-analysis-state financial-insights-state panel-card">
         <BrainCircuit size={30} />
         <h2>Set up your business first</h2>
         <p>
@@ -108,7 +108,7 @@ export default function AIAnalysisPanel({
   if (!token) {
     return (
       <section
-        className="financial-insights-state panel-card"
+        className="ai-analysis-state financial-insights-state panel-card"
         role="alert"
       >
         <AlertCircle size={28} />
@@ -120,7 +120,7 @@ export default function AIAnalysisPanel({
 
   if (isLoading) {
     return (
-      <section className="financial-insights-state panel-card">
+      <section className="ai-analysis-state financial-insights-state panel-card">
         <LoaderCircle
           className="financial-insights-spinner"
           size={28}
@@ -137,14 +137,14 @@ export default function AIAnalysisPanel({
   if (error) {
     return (
       <section
-        className="financial-insights-state panel-card"
+        className="ai-analysis-state financial-insights-state panel-card"
         role="alert"
       >
         <AlertCircle size={28} />
         <h2>AI analysis could not be generated</h2>
         <p>{error}</p>
         <button
-          className="financial-insights-button"
+          className="ai-analysis-button financial-insights-button"
           onClick={retryAnalysis}
         >
           <RefreshCw size={16} />
@@ -168,8 +168,8 @@ export default function AIAnalysisPanel({
   const analysisLines = data.analysis.split("\n");
 
   return (
-    <div className="financial-insights-page">
-      <section className="financial-insights-header">
+    <div className="ai-analysis-page financial-insights-page">
+      <section className="ai-analysis-header financial-insights-header">
         <div>
           <span className="financial-insights-eyebrow">
             <BrainCircuit size={15} />
@@ -182,14 +182,14 @@ export default function AIAnalysisPanel({
           </p>
         </div>
 
-        <div className="financial-insights-business">
+        <div className="ai-analysis-business financial-insights-business">
           <span className="financial-insights-status-dot" />
           {business.name}
         </div>
       </section>
 
-      <section className="financial-insights-panel">
-        <div className="financial-insights-panel-heading">
+      <section className="ai-analysis-panel financial-insights-panel">
+        <div className="ai-analysis-panel-heading financial-insights-panel-heading">
           <div>
             <span className="financial-insights-eyebrow">
               BACKEND-CALCULATED EVIDENCE
@@ -202,37 +202,37 @@ export default function AIAnalysisPanel({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-lg border p-4">
+        <div className="ai-analysis-metrics grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="ai-analysis-metric rounded-lg border p-4">
             <p className="text-sm text-gray-500">Recorded income</p>
-            <p className="mt-2 text-xl font-semibold">
+            <p className="ai-analysis-metric-value mt-2 text-xl font-semibold">
               {formatMoney(data.financial_summary.total_income)}
             </p>
           </div>
 
-          <div className="rounded-lg border p-4">
+          <div className="ai-analysis-metric rounded-lg border p-4">
             <p className="text-sm text-gray-500">Recorded expenses</p>
-            <p className="mt-2 text-xl font-semibold">
+            <p className="ai-analysis-metric-value mt-2 text-xl font-semibold">
               {formatMoney(data.financial_summary.total_expenses)}
             </p>
           </div>
 
-          <div className="rounded-lg border p-4">
+          <div className="ai-analysis-metric rounded-lg border p-4">
             <p className="text-sm text-gray-500">Net balance</p>
-            <p className="mt-2 text-xl font-semibold">
+            <p className="ai-analysis-metric-value mt-2 text-xl font-semibold">
               {formatMoney(data.financial_summary.net_balance)}
             </p>
           </div>
 
-          <div className="rounded-lg border p-4">
+          <div className="ai-analysis-metric rounded-lg border p-4">
             <p className="text-sm text-gray-500">Recorded transactions</p>
-            <p className="mt-2 text-xl font-semibold">
+            <p className="ai-analysis-metric-value mt-2 text-xl font-semibold">
               {data.financial_summary.transaction_count}
             </p>
           </div>
         </div>
 
-        <div className="mt-6 space-y-2">
+        <div className="ai-analysis-additional-metrics mt-6 space-y-2">
           <h4 className="font-semibold">Additional metrics</h4>
           <p className="text-sm leading-6">
             Expenses as a percentage of recorded income:{" "}
@@ -264,7 +264,7 @@ export default function AIAnalysisPanel({
             </p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+              <table className="ai-analysis-table w-full text-left text-sm">
                 <thead>
                   <tr className="border-b">
                     <th className="py-2 pr-4">Type</th>
@@ -296,8 +296,8 @@ export default function AIAnalysisPanel({
         </div>
       </section>
 
-      <section className="financial-insights-panel">
-        <div className="financial-insights-panel-heading">
+      <section className="ai-analysis-panel financial-insights-panel">
+        <div className="ai-analysis-panel-heading financial-insights-panel-heading">
           <div>
             <span className="financial-insights-eyebrow">
               <Sparkles size={15} />
@@ -310,7 +310,7 @@ export default function AIAnalysisPanel({
           </div>
 
           <button
-            className="financial-insights-button"
+            className="ai-analysis-button financial-insights-button"
             onClick={retryAnalysis}
           >
             <RefreshCw size={16} />
@@ -318,7 +318,7 @@ export default function AIAnalysisPanel({
           </button>
         </div>
 
-        <div className="financial-insights-observations">
+        <div className="ai-analysis-observations financial-insights-observations">
           {analysisLines.map((line, index) => {
             const trimmedLine = line.trim();
 
@@ -375,7 +375,7 @@ export default function AIAnalysisPanel({
           })}
         </div>
 
-        <p className="financial-insights-disclaimer">
+        <p className="ai-analysis-disclaimer financial-insights-disclaimer">
           This analysis is limited to the information recorded in
           OyejaAI. Net balance is not proof of accounting profit or
           verified cash available. Review the findings alongside
