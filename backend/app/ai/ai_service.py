@@ -62,7 +62,7 @@ STRICT RULES:
                     contents=prompt,
                     config=types.GenerateContentConfig(
                         temperature=0.2,
-                        max_output_tokens=800,
+                        max_output_tokens=1200,
                     ),
                 )
 
@@ -87,6 +87,14 @@ STRICT RULES:
                     f"text_length={len(raw_text)}, "
                     f"block_reason={block_reason}"
                 )
+
+                # Never return an explicitly truncated Gemini response.
+                if "MAX_TOKENS" in str(finish_reason).upper():
+                    raise RuntimeError(
+                        "Gemini stopped at the output-token limit. "
+                        "The analysis was not returned because it may "
+                        "be incomplete."
+                    )
 
                 result = raw_text.strip()
                 if not result:
